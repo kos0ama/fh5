@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Socket test</title>
+  </head>
+  <body>
+    <form id="sendForm">
+      Conversation ID: <input id="cid" size="36"> <button id="send" disabled>START</button>
+    </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+    <script>
+const make_default_handler = (name) => {
+  return (param) => {
+    console.log(`on ${name}: ${param}`);
+  };
+};
+
+const socket = io.connect('https://real-time-solution.voice-analysis-dev.jp-tok.containers.appdomain.cloud');
+
+// 接続された
+socket.on('connect', (param) => {
+  console.log(`on connect: ${param}`);
+  // 認証情報の送信
+  socket.emit('authentication_check', 'f6916e54e45bcc23ced869b9298454d57544053fca44c3d6e76e52b7385006bf');
+});
+
+// 認証結果の受信
+socket.on('authentication_result', (param) => {
+  console.log(`on authentication_result: ${param}`);
+  if (param === 'connection success') {
+    document.querySelector('#send').disabled = false;
+  }
+});
+
+// ?
+socket.on('connect_message', make_default_handler('connect_message'));
+
+// 会話が開始された？
+socket.on('connection_start', make_default_handler('connection_start'));
+
+// ?
+socket.on('alert', make_default_handler('alert'));
+
+// ?
+socket.on('view_recommend_solution_list', make_default_handler('view_recommend_solution_list'));
+
+// submitの抑止
+document.querySelector('#sendForm').onsubmit = (event) => {
+  event.preventDefault();
+  return false;
+};
+
+// STARTボタンを押すと、会話の受信開始
+document.querySelector('#send').onclick = (event) => {
+  console.log(`onEvent #send clicked: ${event}`);
+  event.preventDefault();
+  const cid = document.querySelector('#cid').value;
+  console.log(`Starting call: ${cid}`);
+  socket.emit('call_start', cid);
+};
+    </script>
+  </body>
+</html>
